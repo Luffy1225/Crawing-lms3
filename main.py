@@ -1,5 +1,6 @@
 import configparser
 import os
+import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -171,12 +172,12 @@ def main():
     lms.Login()
     lms.LoginCheck()
     lms.Print_All_Course()
-    input("按 Enter 鍵以關閉瀏覽器...")
-    lms.Driver.quit()
+
 
 
 if __name__ == "__main__":
     main()
+
     
 
 
