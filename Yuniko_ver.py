@@ -13,38 +13,10 @@ class LMS3_0_User:
         self.Acc_Pwd_Setup()
 
     def Acc_Pwd_Setup(self):
-        if not os.path.exists(self.ini_filename):
-            print(f"檔案 {self.ini_filename} 不存在。使用手動輸入模式。")
-            
-            # 提示使用者輸入帳號和密碼
-            self.username = input("請輸入帳號: ")
-            self.password = input("請輸入密碼: ")
 
-            config = configparser.ConfigParser()
-            
-            # 添加 'credentials' 區塊並 裝入帳號密碼
-            config['credentials'] = {
-                'username': self.username,
-                'password': self.password
-            }
+        self.username = input("請輸入帳號: ")
+        self.password = input("請輸入密碼: ")
 
-            # 將資料寫入到 ini 檔案
-            with open(self.ini_filename, 'w') as configfile:
-                config.write(configfile)
-            
-            print(f"已創建檔案 {self.ini_filename} 並儲存帳號密碼。下次不需再輸入。")
-
-        else:
-            config = configparser.ConfigParser()
-
-            # 讀取 INI 檔案
-            config.read(self.ini_filename)
-
-            self.username = config['credentials']['username']
-            self.password = config['credentials']['password']
-
-            print(f"Username: {self.username}")
-            print(f"Password: {self.password}")
 
 class LMS_Course:
 
@@ -95,6 +67,7 @@ class LMS3_0:
         self.Driver.get(url)
 
     def Login(self):
+        print("連線中")
         self.OpenLMSHome()
 
         # 帳號密碼輸入框
@@ -109,6 +82,9 @@ class LMS3_0:
         login_button = self.Driver.find_element(By.ID, "loginbtn")
         login_button.click()
         time.sleep(5)
+
+
+        self.LoginCheck()
 
     def LoginCheck(self):
         page_source = self.Driver.page_source
@@ -126,15 +102,16 @@ class LMS3_0:
 
     def Print_All_Course(self):
         # self.OpenLMSHome()
+        if(self.LoginPass):
+            # 找到我的課程 div
+            div = self.Driver.find_elements(By.CSS_SELECTOR, 'div[data-region="course-view-content"]')
+            text = div[0].text
 
-        # 找到我的課程 div
-        div = self.Driver.find_elements(By.CSS_SELECTOR, 'div[data-region="course-view-content"]')
-        text = div[0].text
-
-        # 將文本根據 字串\n切割 
-        lines = text.split('\n')
-        self._parse_course_data(lines)
-        self.Print_Courses()
+            # 將文本根據 字串\n切割 
+            lines = text.split('\n')
+            self._parse_course_data(lines)
+            self.Print_Courses()
+            
 
 
     def _parse_course_data(self,lines): # 把 課程字串 轉換成 LMS_Course 物件
