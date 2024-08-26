@@ -165,7 +165,7 @@ def main():
     lms.LoginCheck()
     lms.Print_All_Course()
     input("按 Enter 鍵以關閉瀏覽器...")
-    lms.driver.quit()
+    lms.Driver.quit()
 
 
 if __name__ == "__main__":
