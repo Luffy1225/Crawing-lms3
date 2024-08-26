@@ -20,10 +20,9 @@ class LMS3_0_User:
             self.username = input("請輸入帳號: ")
             self.password = input("請輸入密碼: ")
 
-            # 建立 ConfigParser 物件
             config = configparser.ConfigParser()
             
-            # 添加 'credentials' 區塊並設定帳號密碼
+            # 添加 'credentials' 區塊並 裝入帳號密碼
             config['credentials'] = {
                 'username': self.username,
                 'password': self.password
@@ -36,13 +35,11 @@ class LMS3_0_User:
             print(f"已創建檔案 {self.ini_filename} 並儲存帳號密碼。下次不需再輸入。")
 
         else:
-            # 建立 ConfigParser 物件
             config = configparser.ConfigParser()
 
             # 讀取 INI 檔案
             config.read(self.ini_filename)
 
-            # 取得帳號和密碼
             self.username = config['credentials']['username']
             self.password = config['credentials']['password']
 
@@ -68,7 +65,7 @@ class LMS_Course:
 
 class LMS3_0:
 
-    def __init__(self, noHead: bool, LMS_User : LMS3_0_User):
+    def __init__(self, noHead: bool, LMS_User : LMS3_0_User):  #noHead 是要不要顯示出web  # User 是關於帳號密碼的
         self.User = LMS_User
         
         self.NoHead = noHead
@@ -76,6 +73,7 @@ class LMS3_0:
         self.Chrome_options = Options()
         self.Service = None
         self.Courses = []
+        self.LoginPass = False
 
         self.SeleniumSetup()
 
@@ -87,16 +85,19 @@ class LMS3_0:
             self.Chrome_options.add_argument("--disable-gpu")
             self.Chrome_options.add_argument("--no-sandbox")
 
-        # 初始化瀏覽器
+        # 初始化網頁
         self.Service = Service(ChromeDriverManager().install())
         self.Driver = webdriver.Chrome(service=self.Service, options=self.Chrome_options)    
 
-    def OpenLMS3(self):
+    def OpenLMSHome(self):
         # 開啟數位學院3.0
         url = "https://lms3.ntpu.edu.tw/login/index.php"
         self.Driver.get(url)
 
-        # 找到帳號和密碼輸入框
+    def Login(self):
+        self.OpenLMSHome()
+
+        # 帳號密碼輸入框
         username_input = self.Driver.find_element(By.ID, "username")
         password_input = self.Driver.find_element(By.ID, "password")
 
@@ -104,7 +105,7 @@ class LMS3_0:
         username_input.send_keys(self.User.username)
         password_input.send_keys(self.User.password)
 
-        # 找到並點擊登入按鈕
+        # 點擊登入按鈕
         login_button = self.Driver.find_element(By.ID, "loginbtn")
         login_button.click()
         time.sleep(5)
@@ -117,20 +118,20 @@ class LMS3_0:
             return False
         elif "我的課程" in page_source:
             print("登入成功")
+            self.LoginPass = True
             return True
         else:
             print(page_source)
             return False
 
     def Print_All_Course(self):
-        # self.OpenLMS3()
+        # self.OpenLMSHome()
 
-        # 找到我的課程
-
+        # 找到我的課程 div
         div = self.Driver.find_elements(By.CSS_SELECTOR, 'div[data-region="course-view-content"]')
         text = div[0].text
 
-        # 將文本按行分割成列表
+        # 將文本根據 字串\n切割 
         lines = text.split('\n')
         self._parse_course_data(lines)
         self.Print_Courses()
@@ -138,19 +139,26 @@ class LMS3_0:
 
     def _parse_course_data(self,lines): # 把 課程字串 轉換成 LMS_Course 物件
 
+        """ 文字格式 :
+        'Course image'
+        'Course category'
+        "開課學系"
+        'Course name'
+        "課程名稱"
+        教師: 教師名稱
+        """
+
         # 從字串解析課程資料
         for i in range(0, len(lines), 6):  # 每六行一組資料
             if i + 5 < len(lines):
-                category = lines[i + 2]
-                course_name = lines[i + 4]
+                category = lines[i + 2]       # 開課學系
+                course_name = lines[i + 4]    # 課程名稱
                 teacher = lines[i + 5].replace('教師: ', '')
                 course = LMS_Course(category, course_name, teacher)
                 self.Courses.append(course)
                 
 
     def Print_Courses(self):
-
-        # 輸出結果以確認
         for course in self.Courses:
             print(f"Category: {course.Category}\nCourse Name: {course.Course_Name}\nTeacher: {course.Teacher}\n")
 
@@ -158,10 +166,9 @@ class LMS3_0:
 
 
 def main():
-    user = LMS3_0_User()  # 創建 LMS3_0_User 實例
-    lms = LMS3_0(noHead=False, LMS_User=user)  # 將 LMS3_0_User 實例傳遞給 LMS3_0
-
-    lms.OpenLMS3()
+    user = LMS3_0_User()  
+    lms = LMS3_0(noHead=False, LMS_User=user)  
+    lms.Login()
     lms.LoginCheck()
     lms.Print_All_Course()
     input("按 Enter 鍵以關閉瀏覽器...")
