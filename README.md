@@ -2,6 +2,15 @@
 
 這是一個使用 Python 和 Selenium 的自動化腳本，用於自動登入 臺北大學數位系統3.0 。
 
+## 簡單開始(Yuniko)
+
+```bash
+   git clone https://github.com/Luffy1225/Crawing-lms3.git
+   cd Crawing-lms3
+   python Yuniko_ver.py
+```
+
+
 ## 簡單開始
 
 ```bash
